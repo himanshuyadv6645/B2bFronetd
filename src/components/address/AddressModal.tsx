@@ -232,7 +232,7 @@ export function AddressModal() {
                     {isDetectingLocation ? 'Detecting location...' : 'Use Current Location'}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {isDetectingLocation ? 'Please allow location access in browser popup' : 'Click address bar lock icon → Allow Location'}
+                    {isDetectingLocation ? 'Please allow location access in the browser popup' : 'Auto-fill your delivery area using GPS'}
                   </p>
                 </div>
               </button>

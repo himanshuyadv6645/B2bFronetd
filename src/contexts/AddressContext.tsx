@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { buyerService } from '@/services/buyer.service';
-import { detectLocationCoords, detectLocationViaIP, clearCachedLocation } from '@/services/location.service';
+import { detectLocationCoords, detectLocationViaIP, reverseGeocode, clearCachedLocation } from '@/services/location.service';
 import type { BuyerAddress } from '@/types/buyer';
 import toast from 'react-hot-toast';
 
@@ -113,7 +113,6 @@ export function AddressProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
-  const autoDetectInitiated = useRef(false);
 
   const loadAddresses = useCallback(async () => {
     setIsLoading(true);
@@ -217,40 +216,79 @@ export function AddressProvider({ children }: { children: ReactNode }) {
   }, [isAuthenticated, isBuyer, loadAddresses]);
 
   const detectAndSaveLocation = useCallback(async () => {
-    if (autoDetectInitiated.current) return;
-    autoDetectInitiated.current = true;
-
+    setIsDetectingLocation(true);
     try {
-      setIsDetectingLocation(true);
-
+      // 1. Get coordinates. detectLocationCoords(true) triggers the browser's
+      //    native permission prompt. Distinguish an explicit denial (code 1) from
+      //    a transient failure (unavailable/timeout) — only fall back to coarse IP
+      //    geolocation for the latter, so we never mask a denial with a wrong city.
       let coords;
       try {
         coords = await detectLocationCoords(true);
       } catch (geoErr: any) {
-        const code = geoErr?.code;
-        if (code === 1) {
-          toast.error('Location permission denied. Click 🔒 in address bar → Location → Allow', { duration: 6000 });
+        if (geoErr?.code === 1) {
+          toast.error('Location access blocked. Click the 🔒 lock icon in the address bar → Location → Allow, then try again.', { duration: 7000 });
           return;
         }
-        coords = await detectLocationViaIP();
+        try {
+          coords = await detectLocationViaIP();
+        } catch {
+          toast.error('Could not detect your location. Please enter your address manually.', { duration: 5000 });
+          return;
+        }
       }
 
-      const savedAddress = await buyerService.saveDetectedLocation(coords);
-      markLocationDetected();
+      // 2. Turn coordinates into a saved delivery address.
+      if (isAuthenticated && isBuyer) {
+        // Authenticated buyer → backend reverse-geocodes and persists the address.
+        const savedAddress = await buyerService.saveDetectedLocation(coords);
+        const apiAddresses = await buyerService.getAddresses();
+        setAddresses(apiAddresses);
+        setSelectedAddress(savedAddress);
+        setStoredAuthAddress(savedAddress);
+        markLocationDetected();
+        toast.success(`Location set: ${[savedAddress.city, savedAddress.state].filter(Boolean).join(', ')}`);
+      } else {
+        // Guest → reverse-geocode client-side and save to guest storage.
+        const geo = await reverseGeocode(coords);
+        if (!geo.city && !geo.state && !geo.pincode) {
+          toast.error('Could not determine your address. Please enter it manually.', { duration: 5000 });
+          return;
+        }
+        const guestAddr = {
+          id: generateGuestId(),
+          address_type: 'shipping',
+          label: 'Current Location',
+          contact_name: '',
+          contact_phone: '',
+          address_line1: geo.address_line1,
+          address_line2: null,
+          city: geo.city,
+          state: geo.state,
+          pincode: geo.pincode,
+          country: geo.country,
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+          is_default: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        } as BuyerAddress;
 
-      const apiAddresses = await buyerService.getAddresses();
-      setAddresses(apiAddresses);
-      setSelectedAddress(savedAddress);
-      setStoredAuthAddress(savedAddress);
-
-      toast.success(`Location detected: ${savedAddress.city}, ${savedAddress.state}`);
+        // Replace any previous "Current Location" entry so it doesn't pile up.
+        const updated = [guestAddr, ...getGuestAddresses().filter((a) => a.label !== 'Current Location')];
+        setAddresses(updated);
+        setGuestAddresses(updated);
+        setSelectedAddress(guestAddr);
+        setStoredGuestAddress(guestAddr);
+        markLocationDetected();
+        toast.success(`Location set: ${[geo.city, geo.state].filter(Boolean).join(', ')}`);
+      }
     } catch (err: any) {
-      toast.error('Could not detect location. Please enter address manually.', { duration: 5000 });
+      toast.error('Could not detect location. Please enter your address manually.', { duration: 5000 });
     } finally {
-      autoDetectInitiated.current = false;
       setIsDetectingLocation(false);
     }
-  }, []);
+  }, [isAuthenticated, isBuyer]);
 
   const selectAddress = useCallback((address: BuyerAddress) => {
     setSelectedAddress(address);
