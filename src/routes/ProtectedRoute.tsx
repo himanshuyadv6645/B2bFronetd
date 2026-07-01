@@ -1,4 +1,5 @@
 import { Navigate, useLocation } from 'react-router-dom';
+import { useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAuthRedirect } from '@/contexts/AuthRedirectContext';
 import { PageLoading } from '@/components/common/LoadingSpinner';
@@ -48,25 +49,30 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
 export function GuestRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, user } = useAuth();
   const { getAndClearRedirect } = useAuthRedirect();
+  // Resolve the post-login destination exactly ONCE per mount. getAndClearRedirect
+  // consumes a one-time value from sessionStorage, and React 19 StrictMode double-
+  // invokes render — without this guard the 2nd invocation would get null and fall
+  // back to home, dropping the saved product URL the user came from.
+  const target = useRef<string | null>(null);
 
   if (isLoading) {
     return <PageLoading />;
   }
 
   if (isAuthenticated && user?.role) {
-    const redirectState = getAndClearRedirect();
-    if (redirectState) {
-      const targetUrl = redirectState.pathname + redirectState.search + redirectState.hash;
-      // Restore scroll after navigation
-      requestAnimationFrame(() => {
-        window.scrollTo(0, redirectState.scrollY);
-      });
-      // NOTE: pending action stays in sessionStorage for target component to execute on mount
-      return <Navigate to={targetUrl} replace />;
+    if (target.current === null) {
+      const redirectState = getAndClearRedirect();
+      if (redirectState) {
+        target.current = redirectState.pathname + redirectState.search + redirectState.hash;
+        // Restore scroll after navigation
+        const scrollY = redirectState.scrollY;
+        requestAnimationFrame(() => window.scrollTo(0, scrollY));
+        // NOTE: pending action stays in sessionStorage for target component to execute on mount
+      } else {
+        target.current = user.role === 'buyer' ? '/' : `/${user.role}/dashboard`;
+      }
     }
-
-    const redirectPath = user.role === 'buyer' ? '/' : `/${user.role}/dashboard`;
-    return <Navigate to={redirectPath} replace />;
+    return <Navigate to={target.current} replace />;
   }
 
   return <>{children}</>;

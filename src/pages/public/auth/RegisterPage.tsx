@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '@/contexts/AuthContext';
@@ -13,7 +13,6 @@ import toast from 'react-hot-toast';
 import { FiMail, FiPhone, FiUser } from 'react-icons/fi';
 
 export default function RegisterPage() {
-  const navigate = useNavigate();
   const { register: registerUser } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -34,7 +33,8 @@ export default function RegisterPage() {
     try {
       await registerUser(data);
       toast.success('Registration successful!');
-      navigate(`/${data.role}/dashboard`);
+      // GuestRoute detects isAuthenticated and redirects back to the saved page
+      // (e.g. the product the user was buying), falling back to the role dashboard/home.
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
       const message = err?.response?.data?.message || 'Registration failed. Please try again.';
