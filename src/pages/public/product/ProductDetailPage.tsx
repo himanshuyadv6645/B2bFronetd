@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
 import { ProductImage } from '@/components/common/ProductImage';
+import { ImageLightbox } from '@/components/common/ImageLightbox';
 import { ProductCard } from '@/components/common/ProductCard';
 import { PageLoading } from '@/components/common/LoadingSpinner';
 import { formatCurrency } from '@/lib/utils';
@@ -37,12 +38,26 @@ export default function ProductDetailPage() {
   const { addToCart } = useCart();
   const { addToWishlist, items: wishlistItems } = useWishlist();
   const [selectedImage, setSelectedImage] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [selectedSeller, setSelectedSeller] = useState<string | null>(null);
   const [pincode, setPincode] = useState('');
   const [pinChecked, setPinChecked] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
   const [isZooming, setIsZooming] = useState(false);
+  // Hover-zoom is a mouse-only affordance. On touch devices a tap fires a synthetic
+  // mouseenter/mousemove but NEVER a mouseleave, so the image would stay stuck at
+  // scale(2) and zoom into an off-screen (black) region. Only enable it for a fine
+  // pointer with true hover.
+  const [canHover, setCanHover] = useState(
+    () => typeof window !== 'undefined' && !!window.matchMedia?.('(hover: hover) and (pointer: fine)').matches
+  );
+  useEffect(() => {
+    const mq = window.matchMedia('(hover: hover) and (pointer: fine)');
+    const onChange = (e: MediaQueryListEvent) => { setCanHover(e.matches); if (!e.matches) setIsZooming(false); };
+    mq.addEventListener?.('change', onChange);
+    return () => mq.removeEventListener?.('change', onChange);
+  }, []);
 
   const { data: product, isLoading } = useQuery({
     queryKey: ['product', slug],
@@ -90,11 +105,13 @@ export default function ProductDetailPage() {
   }, [product, addToCart, addToWishlist, navigate, getAndClearPendingAction]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!canHover) return;
     const rect = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    if (!rect.width || !rect.height) return;
+    const x = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+    const y = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100));
     setZoomPosition({ x, y });
-  }, []);
+  }, [canHover]);
 
   if (isLoading) return <PageLoading />;
   if (!product) {
@@ -197,9 +214,9 @@ export default function ProductDetailPage() {
       {/* Main image */}
       <div
         className="group relative aspect-square overflow-hidden rounded-xl border bg-white"
-        onMouseEnter={() => setIsZooming(true)}
-        onMouseLeave={() => setIsZooming(false)}
-        onMouseMove={handleMouseMove}
+        onMouseEnter={canHover ? () => setIsZooming(true) : undefined}
+        onMouseLeave={canHover ? () => setIsZooming(false) : undefined}
+        onMouseMove={canHover ? handleMouseMove : undefined}
       >
         {product.is_featured && (
           <span className="absolute left-0 top-3 z-10 rounded-r bg-gray-900 px-2 py-0.5 text-[10px] font-semibold text-white">Top Seller</span>
@@ -221,26 +238,29 @@ export default function ProductDetailPage() {
           </button>
         </div>
 
-        {/* Zoom indicator */}
-        {!isZooming && (
+        {/* Zoom indicator — "hover to zoom" on mouse, persistent "tap to zoom" on touch */}
+        {canHover && !isZooming ? (
           <div className="absolute bottom-3 right-3 z-10 flex items-center gap-1 rounded-full bg-black/50 px-2 py-1 text-[10px] text-white opacity-0 transition-opacity group-hover:opacity-100">
-            <FiZoomIn className="h-3 w-3" /> Hover to zoom
+            <FiZoomIn className="h-3 w-3" /> Click to zoom
           </div>
-        )}
+        ) : !canHover ? (
+          <div className="absolute bottom-3 right-3 z-10 flex items-center gap-1 rounded-full bg-black/50 px-2 py-1 text-[10px] text-white">
+            <FiZoomIn className="h-3 w-3" /> Tap to zoom
+          </div>
+        ) : null}
 
-        {/* Image with hover zoom */}
+        {/* Image with hover zoom — click/tap opens the fullscreen viewer (with zoom out) */}
         <div
           className="h-full w-full overflow-hidden"
-          style={isZooming ? {
-            cursor: 'crosshair',
-          } : {}}
+          style={{ cursor: isZooming ? 'crosshair' : 'zoom-in' }}
+          onClick={() => setLightboxOpen(true)}
         >
           <ProductImage
             src={images.length ? images[selectedImage]?.image_url : product.primary_image}
             name={product.name}
             index={selectedImage}
             className="h-full w-full object-contain transition-transform duration-200 ease-out"
-            style={isZooming ? {
+            style={isZooming && canHover ? {
               transform: 'scale(2)',
               transformOrigin: `${zoomPosition.x}% ${zoomPosition.y}%`,
             } : undefined}
@@ -628,6 +648,17 @@ export default function ProductDetailPage() {
             {relatedProducts.map((p) => <ProductCard key={p.id} product={p} />)}
           </div>
         </section>
+      )}
+
+      {/* Fullscreen image viewer with zoom in / out / reset (opened by tapping the image) */}
+      {lightboxOpen && (
+        <ImageLightbox
+          images={images.length ? images.map((i) => ({ url: i.image_url })) : [{ url: product.primary_image }]}
+          index={selectedImage}
+          onIndexChange={setSelectedImage}
+          onClose={() => setLightboxOpen(false)}
+          productName={product.name}
+        />
       )}
     </div>
   );
