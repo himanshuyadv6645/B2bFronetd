@@ -40,10 +40,19 @@ export function RevenueChart({ data, title = 'Revenue Overview' }: RevenueChartP
                 axisLine={false}
               />
               <YAxis
+                yAxisId="left"
                 tick={{ fontSize: 12 }}
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`}
+              />
+              <YAxis
+                yAxisId="right"
+                orientation="right"
+                tick={{ fontSize: 12 }}
+                tickLine={false}
+                axisLine={false}
+                allowDecimals={false}
               />
               <Tooltip
                 contentStyle={{
@@ -56,8 +65,8 @@ export function RevenueChart({ data, title = 'Revenue Overview' }: RevenueChartP
                 }
               />
               <Legend />
-              <Bar dataKey="revenue" name="Revenue" fill="#4F46E5" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="orders" name="Orders" fill="#818CF8" radius={[4, 4, 0, 0]} />
+              <Bar yAxisId="left" dataKey="revenue" name="Revenue" fill="#4F46E5" radius={[4, 4, 0, 0]} />
+              <Bar yAxisId="right" dataKey="orders" name="Orders" fill="#818CF8" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

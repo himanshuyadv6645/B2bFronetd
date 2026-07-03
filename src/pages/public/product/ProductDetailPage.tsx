@@ -113,6 +113,15 @@ export default function ProductDetailPage() {
     setZoomPosition({ x, y });
   }, [canHover]);
 
+  // Keep the selected quantity at or above the active seller's MOQ, so the user
+  // can't submit below the minimum (which the backend would reject).
+  useEffect(() => {
+    const list = (sellerPricing as any[]) || [];
+    const activeSeller = list.find((s) => s.id === selectedSeller) || list[0];
+    const moq = Number(activeSeller?.minimum_order_quantity) || 1;
+    setQuantity((q) => (q < moq ? moq : q));
+  }, [sellerPricing, selectedSeller]);
+
   if (isLoading) return <PageLoading />;
   if (!product) {
     return (
@@ -129,6 +138,8 @@ export default function ProductDetailPage() {
   const documents = product.documents || [];
   const sellers: any[] = (sellerPricing as any[]) || [];
   const active = sellers.find((s) => s.id === selectedSeller) || sellers[0] || null;
+  const moq = Number(active?.minimum_order_quantity) || 1;
+  const availableStock = product.total_stock ?? 0;
   const variantId = product.variants?.[0]?.id;
   const isInWishlist = wishlistItems.some((item) => item.variant_detail?.product?.id === product.id);
   const relatedProducts = (related?.results || []).filter((p) => p.id !== product.id).slice(0, 12);
@@ -433,16 +444,17 @@ export default function ProductDetailPage() {
             <span className="text-sm font-medium">Quantity</span>
             <div className="flex items-center rounded-md border">
               <button
-                onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                disabled={quantity <= 1}
+                onClick={() => setQuantity(Math.max(moq, quantity - 1))}
+                disabled={quantity <= moq}
                 className="min-h-[44px] min-w-[44px] p-2 transition-colors hover:bg-muted disabled:opacity-50"
               >
                 <FiMinus className="h-4 w-4" />
               </button>
               <span className="w-12 text-center text-sm font-semibold">{quantity}</span>
               <button
-                onClick={() => setQuantity(quantity + 1)}
-                className="min-h-[44px] min-w-[44px] p-2 transition-colors hover:bg-muted"
+                onClick={() => setQuantity((q) => (availableStock > 0 ? Math.min(availableStock, q + 1) : q + 1))}
+                disabled={availableStock > 0 && quantity >= availableStock}
+                className="min-h-[44px] min-w-[44px] p-2 transition-colors hover:bg-muted disabled:opacity-50"
               >
                 <FiPlus className="h-4 w-4" />
               </button>
@@ -587,7 +599,7 @@ export default function ProductDetailPage() {
     <div className="grid grid-cols-1 gap-5 lg:grid-cols-12 lg:gap-6">
       {/* LEFT: Image Gallery — sticky */}
       <div className="lg:col-span-4">
-        <div className="lg:sticky lg:top-[130px] lg:max-h-[calc(100vh-150px)] lg:overflow-y-auto lg:scrollbar-thin lg:scrollbar-thumb-gray-300">
+        <div className="lg:sticky lg:top-[130px] lg:max-h-[calc(100vh-150px)] lg:overflow-y-auto">
           <GalleryColumn />
         </div>
       </div>
@@ -599,7 +611,7 @@ export default function ProductDetailPage() {
 
       {/* RIGHT: Buy Box — sticky */}
       <div className="lg:col-span-3">
-        <div className="lg:sticky lg:top-[130px] lg:max-h-[calc(100vh-150px)] lg:overflow-y-auto lg:scrollbar-thin lg:scrollbar-thumb-gray-300">
+        <div className="lg:sticky lg:top-[130px] lg:max-h-[calc(100vh-150px)] lg:overflow-y-auto">
           <BuyBoxColumn />
         </div>
       </div>

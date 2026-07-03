@@ -324,7 +324,7 @@ export function AddressProvider({ children }: { children: ReactNode }) {
       }
       return guestAddr;
     }
-  }, [isAuthenticated, isBuyer, addresses.length]);
+  }, [isAuthenticated, isBuyer, addresses]);
 
   const updateAddress = useCallback(async (id: string, data: Partial<BuyerAddress>): Promise<BuyerAddress> => {
     if (isAuthenticated && isBuyer) {
