@@ -1,7 +1,8 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { buyerService } from '@/services/buyer.service';
-import { detectLocationCoords, detectLocationViaIP, reverseGeocode, clearCachedLocation } from '@/services/location.service';
+import { detectLocationCoords, detectLocationViaIP, reverseGeocode } from '@/services/location.service';
 import type { BuyerAddress } from '@/types/buyer';
 import toast from 'react-hot-toast';
 
@@ -80,9 +81,6 @@ function generateGuestId(): string {
   return 'guest-' + crypto.randomUUID();
 }
 
-function hasLocationBeenDetected(): boolean {
-  return localStorage.getItem(LOCATION_DETECTED_KEY) === 'true';
-}
 
 function markLocationDetected() {
   localStorage.setItem(LOCATION_DETECTED_KEY, 'true');
@@ -241,7 +239,7 @@ export function AddressProvider({ children }: { children: ReactNode }) {
       // 2. Turn coordinates into a saved delivery address.
       if (isAuthenticated && isBuyer) {
         // Authenticated buyer → backend reverse-geocodes and persists the address.
-        const savedAddress = await buyerService.saveDetectedLocation(coords);
+        const savedAddress = await buyerService.saveDetectedLocation(coords) as BuyerAddress;
         const apiAddresses = await buyerService.getAddresses();
         setAddresses(apiAddresses);
         setSelectedAddress(savedAddress);
@@ -283,7 +281,7 @@ export function AddressProvider({ children }: { children: ReactNode }) {
         markLocationDetected();
         toast.success(`Location set: ${[geo.city, geo.state].filter(Boolean).join(', ')}`);
       }
-    } catch (err: any) {
+    } catch {
       toast.error('Could not detect location. Please enter your address manually.', { duration: 5000 });
     } finally {
       setIsDetectingLocation(false);
@@ -301,7 +299,7 @@ export function AddressProvider({ children }: { children: ReactNode }) {
 
   const createAddress = useCallback(async (data: Omit<BuyerAddress, 'id' | 'created_at' | 'updated_at' | 'user'>): Promise<BuyerAddress> => {
     if (isAuthenticated && isBuyer) {
-      const newAddr = await buyerService.createAddress(data);
+      const newAddr = await buyerService.createAddress(data) as BuyerAddress;
       setAddresses((prev) => [...prev, newAddr]);
       if (data.is_default || addresses.length === 0) {
         setSelectedAddress(newAddr);
@@ -328,7 +326,7 @@ export function AddressProvider({ children }: { children: ReactNode }) {
 
   const updateAddress = useCallback(async (id: string, data: Partial<BuyerAddress>): Promise<BuyerAddress> => {
     if (isAuthenticated && isBuyer) {
-      const updated = await buyerService.updateAddress(id, data);
+      const updated = await buyerService.updateAddress(id, data) as BuyerAddress;
       setAddresses((prev) => prev.map((a) => (a.id === id ? updated : a)));
       if (selectedAddress?.id === id) {
         setSelectedAddress(updated);

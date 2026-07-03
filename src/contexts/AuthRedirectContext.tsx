@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useCallback, type ReactNode } from 'react';
 import type { AuthRedirectState, PendingActionPayload } from '@/types/auth-redirect';
 

@@ -22,7 +22,7 @@ export function HeroBanner() {
   // Always forward: 0 → 1 → 2 → 0(clone) → [instant jump] 0 → 1 ...
   const slides = total > 1 ? [...BANNERS, BANNERS[0]] : BANNERS;
 
-  const goTo = useCallback((i: number) => setCurrent(i), []);
+
 
   const next = useCallback(() => {
     if (total <= 1) return;

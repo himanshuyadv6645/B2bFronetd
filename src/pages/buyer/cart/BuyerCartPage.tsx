@@ -55,7 +55,7 @@ export default function BuyerCartPage() {
   // Auto-open checkout if redirected after login with CHECKOUT pending action
   useEffect(() => {
     const pendingAction = getAndClearPendingAction();
-    if (pendingAction?.action === PendingAction.CHECKOUT && cart?.items?.length > 0) {
+    if (pendingAction?.action === PendingAction.CHECKOUT && (cart?.items?.length ?? 0) > 0) {
       setShowCheckout(true);
     }
   }, [getAndClearPendingAction, cart?.items?.length]);

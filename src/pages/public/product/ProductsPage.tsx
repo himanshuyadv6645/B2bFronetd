@@ -9,9 +9,9 @@ import { Pagination } from '@/components/common/Pagination';
 import { ProductCard } from '@/components/common/ProductCard';
 import { formatCurrency } from '@/lib/utils';
 import {
-  FiFilter, FiGrid, FiList, FiX, FiChevronDown, FiChevronRight, FiChevronUp,
+  FiFilter, FiGrid, FiList, FiX, FiChevronDown, FiChevronRight,
   FiSliders, FiStar, FiTruck, FiPackage, FiTag, FiArrowRight, FiRotateCcw,
-  FiMail, FiMessageSquare, FiShoppingBag, FiSearch, FiEdit2, FiGlobe,
+  FiShoppingBag, FiSearch, FiEdit2, FiGlobe,
 } from 'react-icons/fi';
 
 const PAGE_SIZE = 20;
@@ -186,7 +186,7 @@ export default function ProductsPage() {
   const [priceMax, setPriceMax] = useState('');
   const [showCatTree, setShowCatTree] = useState(false);
   const [brandSearch, setBrandSearch] = useState('');
-  const priceDebounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const priceDebounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const search = searchParams.get('search') || '';
   const page = parseInt(searchParams.get('page') || '1');
@@ -226,7 +226,7 @@ export default function ProductsPage() {
     return navCategories.map((c) => ({ slug: c.slug || c.id, name: c.name, depth: 0, productCount: c.product_count }));
   }, [tree, navCategories]);
 
-  const brands = brandsData?.results || [];
+  const brands = useMemo(() => brandsData?.results || [], [brandsData?.results]);
   const activeCatName = catOptions.find((c) => c.slug === category)?.name;
   const activeBrandName = brands.find((b) => b.id === brand)?.name;
 

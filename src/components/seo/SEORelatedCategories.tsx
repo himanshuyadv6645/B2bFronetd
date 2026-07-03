@@ -28,6 +28,7 @@ export function SEORelatedCategories({ categories }: SEORelatedCategoriesProps) 
                 <ProductImage
                   src={cat.image}
                   alt={cat.name}
+                  name={cat.name}
                   className="h-full w-full object-contain"
                 />
               ) : (

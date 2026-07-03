@@ -64,9 +64,9 @@ export function PopularCategories() {
         ) : (
           <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 sm:gap-4 md:grid-cols-6 lg:grid-cols-8">
             {displayCategories.map((cat) => {
-              const slug = cat.slug || (cat as { id: string }).id;
+              const slug = cat.slug || (cat as any).id;
               const name = cat.name;
-              const productCount = cat.product_count || 0;
+              const productCount = (cat as any).product_count || 0;
 
               return (
                 <Link

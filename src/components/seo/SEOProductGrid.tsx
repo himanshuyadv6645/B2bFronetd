@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ProductImage } from '@/components/common/ProductImage';
 import { formatCurrency } from '@/lib/utils';
-import { FiStar, FiShoppingCart } from 'react-icons/fi';
+import { FiStar } from 'react-icons/fi';
 import type { SEOProduct } from '@/types/seo';
 
 interface SEOProductGridProps {
@@ -26,6 +26,7 @@ export function SEOProductGrid({ products, title = 'Popular Products' }: SEOProd
               <ProductImage
                 src={product.image}
                 alt={product.name}
+                name={product.name}
                 className="h-full w-full object-contain transition-transform group-hover:scale-105"
               />
             </div>

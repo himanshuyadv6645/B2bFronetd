@@ -25,7 +25,7 @@ export function MegaMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const [activeRoot, setActiveRoot] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const { data: tree } = useQuery({
     queryKey: ['mega-menu-tree'],

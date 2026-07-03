@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom';
 import { ProductImage } from '@/components/common/ProductImage';
 import { formatCurrency } from '@/lib/utils';
-import { Badge } from '@/components/ui/Badge';
-import { FiStar, FiHeart, FiShoppingCart, FiUsers, FiCheckCircle, FiEye, FiTrendingUp, FiAward } from 'react-icons/fi';
+
+import { FiStar, FiHeart, FiShoppingCart, FiUsers, FiEye, FiTrendingUp, FiAward } from 'react-icons/fi';
 import type { Product } from '@/types/product';
 import { useState } from 'react';
 

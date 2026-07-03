@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '@/contexts/AuthContext';
@@ -13,12 +13,11 @@ import toast from 'react-hot-toast';
 import { FiMail, FiInfo } from 'react-icons/fi';
 
 export default function LoginPage() {
-  const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
-  const redirectTo = (location.state as { from?: string })?.from || '/';
+
   const redirectMessage = (location.state as { message?: string })?.message;
 
   const {

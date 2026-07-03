@@ -97,8 +97,8 @@ export default function HomePage() {
             created_at: '',
             updated_at: '',
             product_count: gc.product_count,
-          })),
-        });
+          }) as unknown as Category),
+        } as unknown as Category);
       }
     }
   }

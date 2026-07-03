@@ -8,7 +8,7 @@ interface SEOHeroProps {
   brandName?: string;
 }
 
-export function SEOHero({ heading, intro, cityName, categoryName, brandName }: SEOHeroProps) {
+export function SEOHero({ heading, intro, cityName }: SEOHeroProps) {
   const highlights = [
     { icon: FiCheckCircle, text: 'Verified Sellers' },
     { icon: FiShield, text: 'GST Invoicing' },

@@ -4,7 +4,7 @@ import { seoService } from '@/services/seo.service';
 import { PageLoading } from '@/components/common/LoadingSpinner';
 import { ProductCard } from '@/components/common/ProductCard';
 import { Button } from '@/components/ui/Button';
-import { FiAlertTriangle, FiMapPin, FiShield, FiTruck, FiCheckCircle, FiChevronDown, FiChevronUp, FiHelpCircle, FiSearch, FiGrid, FiStar, FiPackage } from 'react-icons/fi';
+import { FiAlertTriangle, FiMapPin, FiShield, FiTruck, FiCheckCircle, FiChevronDown, FiChevronUp, FiHelpCircle, FiSearch, FiGrid, FiStar } from 'react-icons/fi';
 import { useEffect, useState } from 'react';
 import type { SEOPageData } from '@/types/seo';
 import type { Product } from '@/types/product';
@@ -244,7 +244,7 @@ export default function SEOLandingPage() {
                     : `Products${page.city ? ' in ' + page.city : ''}`
                   }
                 </h2>
-                <span className="text-xs text-muted-foreground sm:text-sm">{page.total_products} items</span>
+                <span className="text-xs text-muted-foreground sm:text-sm">{(page as any).total_products || page.products.length} items</span>
               </div>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 sm:gap-4">
                 {page.products.map((product) => (
