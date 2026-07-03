@@ -34,8 +34,9 @@ export const adminService = {
     return response.data.data;
   },
 
-  getPendingProductReviews: async (params?: PaginationParams) => {
-    const response = await api.get<PaginatedResponse<any>>('/reviews/admin/products/', { params: { ...params, status: 'pending' } });
+  // Reviews - Product
+  getProductReviews: async (params?: PaginationParams) => {
+    const response = await api.get<PaginatedResponse<any>>('/reviews/admin/products/', { params });
     return response.data;
   },
 
@@ -49,8 +50,9 @@ export const adminService = {
     return response.data.data;
   },
 
-  getPendingSellerReviews: async (params?: PaginationParams) => {
-    const response = await api.get<PaginatedResponse<any>>('/reviews/admin/sellers/', { params: { ...params, status: 'pending' } });
+  // Reviews - Seller
+  getSellerReviews: async (params?: PaginationParams) => {
+    const response = await api.get<PaginatedResponse<any>>('/reviews/admin/sellers/', { params });
     return response.data;
   },
 
