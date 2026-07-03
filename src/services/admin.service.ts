@@ -33,4 +33,34 @@ export const adminService = {
     const response = await api.post<ApiResponse<SellerProfile>>(`/sellers/admin/sellers/${id}/approve/`, { action: 'reject', reason });
     return response.data.data;
   },
+
+  getPendingProductReviews: async (params?: PaginationParams) => {
+    const response = await api.get<PaginatedResponse<any>>('/reviews/admin/products/', { params: { ...params, status: 'pending' } });
+    return response.data;
+  },
+
+  approveProductReview: async (id: string) => {
+    const response = await api.post<ApiResponse<any>>(`/reviews/admin/products/${id}/approve/`);
+    return response.data.data;
+  },
+
+  rejectProductReview: async (id: string) => {
+    const response = await api.post<ApiResponse<any>>(`/reviews/admin/products/${id}/reject/`);
+    return response.data.data;
+  },
+
+  getPendingSellerReviews: async (params?: PaginationParams) => {
+    const response = await api.get<PaginatedResponse<any>>('/reviews/admin/sellers/', { params: { ...params, status: 'pending' } });
+    return response.data;
+  },
+
+  approveSellerReview: async (id: string) => {
+    const response = await api.post<ApiResponse<any>>(`/reviews/admin/sellers/${id}/approve/`);
+    return response.data.data;
+  },
+
+  rejectSellerReview: async (id: string) => {
+    const response = await api.post<ApiResponse<any>>(`/reviews/admin/sellers/${id}/reject/`);
+    return response.data.data;
+  },
 };

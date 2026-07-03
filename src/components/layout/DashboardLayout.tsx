@@ -8,7 +8,7 @@ import { useState, useRef, useEffect } from 'react';
 import {
   FiHome, FiPackage, FiShoppingCart, FiCreditCard, FiBell, FiSettings, FiLogOut,
   FiMenu, FiX, FiUser, FiGrid, FiTag, FiCheckCircle, FiBarChart2, FiUsers, FiTruck,
-  FiChevronDown, FiPackage as FiBox,
+  FiChevronDown, FiPackage as FiBox, FiStar
 } from 'react-icons/fi';
 
 interface DashboardLayoutProps {
@@ -38,6 +38,7 @@ const sidebarConfig = {
     { icon: FiHome, label: 'Dashboard', path: '/admin/dashboard' },
     { icon: FiUsers, label: 'Users', path: '/admin/users' },
     { icon: FiCheckCircle, label: 'Approvals', path: '/admin/approvals' },
+    { icon: FiStar, label: 'Reviews', path: '/admin/reviews' },
     { icon: FiPackage, label: 'Products', path: '/admin/products' },
     { icon: FiGrid, label: 'Categories', path: '/admin/categories' },
     { icon: FiTag, label: 'Brands', path: '/admin/brands' },
