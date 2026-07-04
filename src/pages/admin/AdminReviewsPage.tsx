@@ -52,9 +52,10 @@ export default function AdminReviewsPage() {
     mutationFn: (id: string) => adminService.approveSellerReview(id),
     onMutate: (id) => updateReviewInCache(['admin-seller-reviews'], id, 'approved'),
     onSuccess: () => toast.success('Review approved'),
-    onError: () => {
+    onError: (error: any) => {
       queryClient.invalidateQueries({ queryKey: ['admin-seller-reviews'] });
-      toast.error('Failed to approve review');
+      const message = error.response?.data?.message || 'Failed to approve review';
+      toast.error(message);
     },
   });
 
@@ -62,9 +63,10 @@ export default function AdminReviewsPage() {
     mutationFn: (id: string) => adminService.rejectSellerReview(id),
     onMutate: (id) => updateReviewInCache(['admin-seller-reviews'], id, 'rejected'),
     onSuccess: () => toast.success('Review rejected'),
-    onError: () => {
+    onError: (error: any) => {
       queryClient.invalidateQueries({ queryKey: ['admin-seller-reviews'] });
-      toast.error('Failed to reject review');
+      const message = error.response?.data?.message || 'Failed to reject review';
+      toast.error(message);
     },
   });
 
