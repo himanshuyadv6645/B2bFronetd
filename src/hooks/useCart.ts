@@ -20,8 +20,9 @@ export function useCart() {
       queryClient.invalidateQueries({ queryKey: ['cart'] });
       toast.success('Item added to cart');
     },
-    onError: () => {
-      toast.error('Failed to add item to cart');
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Failed to add item to cart';
+      toast.error(message);
     },
   });
 
@@ -31,8 +32,9 @@ export function useCart() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cart'] });
     },
-    onError: () => {
-      toast.error('Failed to update cart item');
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Failed to update cart item';
+      toast.error(message);
     },
   });
 
@@ -42,8 +44,9 @@ export function useCart() {
       queryClient.invalidateQueries({ queryKey: ['cart'] });
       toast.success('Item removed from cart');
     },
-    onError: () => {
-      toast.error('Failed to remove cart item');
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Failed to remove cart item';
+      toast.error(message);
     },
   });
 

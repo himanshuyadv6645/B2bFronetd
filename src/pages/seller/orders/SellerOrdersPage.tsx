@@ -18,6 +18,8 @@ export default function SellerOrdersPage() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [shippingId, setShippingId] = useState<string | null>(null);
+  const [trackingForm, setTrackingForm] = useState({ tracking_number: '', tracking_url: '' });
 
   const { data, isLoading } = useQuery({
     queryKey: ['seller-orders', search, statusFilter],
@@ -27,15 +29,26 @@ export default function SellerOrdersPage() {
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['seller-orders'] });
 
   const shipMutation = useMutation({
-    mutationFn: (id: string) => orderService.shipSellerOrder(id, {}),
-    onSuccess: () => { invalidate(); toast.success('Order marked shipped'); },
-    onError: () => toast.error('Failed to ship order'),
+    mutationFn: ({ id, data }: { id: string; data: { tracking_number?: string; tracking_url?: string } }) => orderService.shipSellerOrder(id, data),
+    onSuccess: () => { 
+      invalidate(); 
+      toast.success('Order marked shipped'); 
+      setShippingId(null);
+      setTrackingForm({ tracking_number: '', tracking_url: '' });
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Failed to ship order';
+      toast.error(message);
+    },
   });
 
   const deliverMutation = useMutation({
     mutationFn: (id: string) => orderService.deliverSellerOrder(id),
     onSuccess: () => { invalidate(); toast.success('Order marked delivered'); },
-    onError: () => toast.error('Failed to deliver order'),
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Failed to deliver order';
+      toast.error(message);
+    },
   });
 
   if (isLoading) return <PageLoading />;
@@ -102,7 +115,7 @@ export default function SellerOrdersPage() {
                       <p className="text-lg font-bold sm:text-xl">{formatCurrency(order.total_amount)}</p>
                       <div className="flex gap-2">
                         {(order.status === 'confirmed' || order.status === 'processing') && (
-                          <Button size="sm" onClick={() => shipMutation.mutate(order.id)} isLoading={shipMutation.isPending}>
+                          <Button size="sm" onClick={() => setShippingId(shippingId === order.id ? null : order.id)} disabled={shipMutation.isPending}>
                             <FiTruck className="mr-1 h-4 w-4" /> Ship
                           </Button>
                         )}
@@ -119,6 +132,20 @@ export default function SellerOrdersPage() {
                     <div className="mt-3 rounded-lg bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive capitalize">Order {order.status}</div>
                   ) : (
                     <OrderStatusStepper status={order.status} />
+                  )}
+                  
+                  {/* Ship Order Form */}
+                  {shippingId === order.id && (
+                    <div className="mt-3 flex flex-col gap-2 rounded-lg border bg-muted/30 p-3 sm:flex-row">
+                      <Input placeholder="Tracking Number (Optional)..." value={trackingForm.tracking_number} onChange={(e) => setTrackingForm({ ...trackingForm, tracking_number: e.target.value })} className="flex-1 h-9 text-sm" />
+                      <Input placeholder="Tracking URL (Optional)..." value={trackingForm.tracking_url} onChange={(e) => setTrackingForm({ ...trackingForm, tracking_url: e.target.value })} className="flex-1 h-9 text-sm" />
+                      <Button size="sm" onClick={() => shipMutation.mutate({ id: order.id, data: trackingForm })} isLoading={shipMutation.isPending}>
+                        Confirm Ship
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => { setShippingId(null); setTrackingForm({ tracking_number: '', tracking_url: '' }); }}>
+                        Cancel
+                      </Button>
+                    </div>
                   )}
                 </CardContent>
               </Card>

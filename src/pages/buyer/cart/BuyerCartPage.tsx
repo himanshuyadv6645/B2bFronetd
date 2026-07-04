@@ -49,7 +49,12 @@ export default function BuyerCartPage() {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       navigate('/buyer/orders');
     },
-    onError: () => toast.error('Failed to place order'),
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Failed to place order';
+      toast.error(message);
+      // If the cart was updated by the backend (e.g. price change), refetch it
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
+    },
   });
 
   // Auto-open checkout if redirected after login with CHECKOUT pending action

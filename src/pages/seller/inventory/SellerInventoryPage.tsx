@@ -35,7 +35,10 @@ export default function SellerInventoryPage() {
       setAdjustQty('');
       setAdjustNotes('');
     },
-    onError: () => toast.error('Failed to update stock'),
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Failed to update stock';
+      toast.error(message);
+    },
   });
 
   if (isLoading) return <PageLoading />;

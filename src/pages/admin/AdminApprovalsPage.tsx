@@ -28,7 +28,10 @@ export default function AdminApprovalsPage() {
       queryClient.invalidateQueries({ queryKey: ['admin-dashboard'] });
       toast.success('Seller approved');
     },
-    onError: () => toast.error('Failed to approve seller'),
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Failed to approve seller';
+      toast.error(message);
+    },
   });
 
   const rejectMutation = useMutation({
@@ -40,7 +43,10 @@ export default function AdminApprovalsPage() {
       setRejectingId(null);
       setRejectReason('');
     },
-    onError: () => toast.error('Failed to reject seller'),
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Failed to reject seller';
+      toast.error(message);
+    },
   });
 
   if (isLoading) return <PageLoading />;
@@ -84,7 +90,8 @@ export default function AdminApprovalsPage() {
                       <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{seller.description}</p>
                     )}
                     <div className="flex flex-wrap gap-2 mt-2 text-xs text-muted-foreground">
-                      {seller.gst_number && <span>GST: {seller.gst_number}</span>}
+                      {seller.gstin && <span>GST: {seller.gstin}</span>}
+                      {seller.pan_number && <span>PAN: {seller.pan_number}</span>}
                       {seller.business_type && <span>Type: {seller.business_type}</span>}
                       <span>Applied: {formatDate(seller.created_at)}</span>
                     </div>

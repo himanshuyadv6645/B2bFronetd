@@ -58,7 +58,7 @@ export default function BuyerProfilePage() {
     values: profile ? {
       company_name: profile.company_name || '',
       business_type: profile.business_type || '',
-      gst_number: profile.gst_number || '',
+      gstin: profile.gstin || '',
       pan_number: profile.pan_number || '',
       website: profile.website || '',
       description: profile.description || '',
@@ -95,7 +95,7 @@ export default function BuyerProfilePage() {
               </div>
               <div className="space-y-1.5">
                 <Label>GST Number</Label>
-                <Input {...register('gst_number')} />
+                <Input {...register('gstin')} />
               </div>
               <div className="space-y-1.5">
                 <Label>PAN Number</Label>

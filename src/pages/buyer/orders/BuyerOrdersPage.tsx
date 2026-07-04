@@ -10,14 +10,30 @@ import { ProductImage } from '@/components/common/ProductImage';
 import { OrderStatusStepper } from '@/components/common/OrderStatusStepper';
 import { formatCurrency, formatDate, getStatusColor } from '@/lib/utils';
 import toast from 'react-hot-toast';
-import { FiShoppingCart, FiX, FiChevronDown, FiChevronUp, FiPackage } from 'react-icons/fi';
+import { FiShoppingCart, FiX, FiChevronDown, FiChevronUp, FiPackage, FiStar } from 'react-icons/fi';
 import { useState } from 'react';
+import { ReviewModal } from '@/components/reviews/ReviewModal';
 
 export default function BuyerOrdersPage() {
   const queryClient = useQueryClient();
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [cancelReason, setCancelReason] = useState('');
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  
+  const [reviewState, setReviewState] = useState<{
+    open: boolean;
+    type: 'product' | 'seller';
+    targetId: string;
+    orderItemId?: string;
+    orderId?: string;
+    variantId?: string;
+    itemName: string;
+  }>({
+    open: false,
+    type: 'product',
+    targetId: '',
+    itemName: '',
+  });
 
   const { data, isLoading } = useQuery({
     queryKey: ['buyer-orders'],
@@ -32,7 +48,10 @@ export default function BuyerOrdersPage() {
       setCancellingId(null);
       setCancelReason('');
     },
-    onError: () => toast.error('Failed to cancel order'),
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Failed to cancel order';
+      toast.error(message);
+    },
   });
 
   if (isLoading) return <PageLoading />;
@@ -84,6 +103,22 @@ export default function BuyerOrdersPage() {
                           <FiX className="mr-1 h-4 w-4" /> Cancel
                         </Button>
                       )}
+                      {order.status === 'delivered' && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="mt-1"
+                          onClick={() => setReviewState({
+                            open: true,
+                            type: 'seller',
+                            targetId: order.items?.[0]?.seller || '',
+                            orderId: order.id,
+                            itemName: order.items?.[0]?.seller_name || 'Seller',
+                          })}
+                        >
+                          <FiStar className="mr-1 h-3.5 w-3.5" /> Rate Seller
+                        </Button>
+                      )}
                     </div>
                   </div>
 
@@ -117,15 +152,36 @@ export default function BuyerOrdersPage() {
                       {expanded && (
                         <div className="mt-2 space-y-2">
                           {order.items.map((item) => (
-                            <div key={item.id} className="flex items-center gap-3 rounded-lg bg-muted/30 p-2">
-                              <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-md border bg-muted">
-                                <ProductImage src={item.product_image || item.variant_detail?.image} name={item.product_name || item.variant_name || 'Product'} />
+                            <div key={item.id} className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-lg bg-muted/30 p-2">
+                              <div className="flex flex-1 items-center gap-3">
+                                <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-md border bg-muted">
+                                  <ProductImage src={item.product_image || item.variant_detail?.image} name={item.product_name || item.variant_name || 'Product'} />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="truncate text-sm font-medium">{item.product_name || item.variant_detail?.product?.name || 'Product'}</p>
+                                  <p className="text-xs text-muted-foreground">{item.seller_name} · Qty {item.quantity} × {formatCurrency(item.unit_price)}</p>
+                                </div>
                               </div>
-                              <div className="min-w-0 flex-1">
-                                <p className="truncate text-sm font-medium">{item.product_name || item.variant_detail?.product?.name || 'Product'}</p>
-                                <p className="text-xs text-muted-foreground">{item.seller_name} · Qty {item.quantity} × {formatCurrency(item.unit_price)}</p>
+                              <div className="flex items-center justify-between sm:flex-col sm:items-end gap-2 px-2 sm:px-0">
+                                <p className="text-sm font-semibold">{formatCurrency(item.total_price)}</p>
+                                {order.status === 'delivered' && (
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="h-7 px-2 text-xs text-brand hover:bg-brand/10"
+                                    onClick={() => setReviewState({
+                                      open: true,
+                                      type: 'product',
+                                      targetId: item.variant_detail?.product?.id || '',
+                                      orderItemId: item.id,
+                                      variantId: item.variant,
+                                      itemName: item.product_name || 'Product',
+                                    })}
+                                  >
+                                    Write Review
+                                  </Button>
+                                )}
                               </div>
-                              <p className="flex-shrink-0 text-sm font-semibold">{formatCurrency(item.total_price)}</p>
                             </div>
                           ))}
                         </div>
@@ -137,6 +193,19 @@ export default function BuyerOrdersPage() {
             );
           })}
         </div>
+      )}
+
+      {reviewState.open && (
+        <ReviewModal
+          open={reviewState.open}
+          onClose={() => setReviewState(prev => ({ ...prev, open: false }))}
+          type={reviewState.type}
+          targetId={reviewState.targetId}
+          orderItemId={reviewState.orderItemId}
+          orderId={reviewState.orderId}
+          variantId={reviewState.variantId}
+          itemName={reviewState.itemName}
+        />
       )}
     </div>
   );

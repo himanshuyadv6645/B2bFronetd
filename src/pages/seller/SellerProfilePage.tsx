@@ -58,7 +58,7 @@ export default function SellerProfilePage() {
     values: profile ? {
       company_name: profile.company_name || '',
       business_type: profile.business_type || '',
-      gst_number: profile.gst_number || '',
+      gstin: profile.gstin || '',
       pan_number: profile.pan_number || '',
       website: profile.website || '',
       description: profile.description || '',
@@ -77,12 +77,12 @@ export default function SellerProfilePage() {
     <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl sm:text-2xl font-bold">Seller Profile</h1>
-        {profile?.approval_status && (
+        {profile?.status && (
           <Badge variant={
-            profile.approval_status === 'approved' ? 'success' :
-            profile.approval_status === 'rejected' ? 'destructive' : 'warning'
-          } className="flex items-center gap-1">
-            <FiCheck className="h-3 w-3" /> {profile.approval_status}
+            profile.status === 'approved' ? 'success' :
+            profile.status === 'rejected' ? 'destructive' : 'warning'
+          } className="flex items-center gap-1 capitalize">
+            <FiCheck className="h-3 w-3" /> {profile.status}
           </Badge>
         )}
       </div>
@@ -105,7 +105,7 @@ export default function SellerProfilePage() {
               </div>
               <div className="space-y-1.5">
                 <Label>GST Number</Label>
-                <Input {...register('gst_number')} />
+                <Input {...register('gstin')} />
               </div>
               <div className="space-y-1.5">
                 <Label>PAN Number</Label>

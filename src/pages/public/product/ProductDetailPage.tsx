@@ -139,7 +139,7 @@ export default function ProductDetailPage() {
   const sellers: any[] = (sellerPricing as any[]) || [];
   const active = sellers.find((s) => s.id === selectedSeller) || sellers[0] || null;
   const moq = Number(active?.minimum_order_quantity) || 1;
-  const availableStock = product.total_stock ?? 0;
+  const availableStock = active?.available_stock !== undefined ? active.available_stock : (product.total_stock ?? 0);
   const variantId = product.variants?.[0]?.id;
   const isInWishlist = wishlistItems.some((item) => item.variant_detail?.product?.id === product.id);
   const relatedProducts = (related?.results || []).filter((p) => p.id !== product.id).slice(0, 12);
@@ -464,8 +464,8 @@ export default function ProductDetailPage() {
           {/* MOQ + Stock */}
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span>{active ? `MOQ: ${active.minimum_order_quantity}` : 'MOQ: 1'}</span>
-            <span className={product.total_stock > 0 ? 'font-medium text-success' : 'text-destructive'}>
-              {product.total_stock > 0 ? 'In Stock' : 'Out of Stock'}
+            <span className={availableStock > 0 ? 'font-medium text-success' : 'text-destructive'}>
+              {availableStock > 0 ? 'In Stock' : 'Out of Stock'}
             </span>
           </div>
 

@@ -6,25 +6,20 @@ export interface SellerProfile extends BaseEntity {
   user_detail?: User;
   company_name: string;
   business_type: string;
-  gst_number: string | null;
+  gstin: string | null;
   pan_number: string | null;
-  trade_license_number: string | null;
-  brand_name: string | null;
-  brand_description: string | null;
-  brand_logo: string | null;
+  contact_name: string | null;
+  contact_phone: string | null;
+  logo: string | null;
+  banner: string | null;
   website: string | null;
   description: string | null;
-  approval_status: 'pending' | 'approved' | 'rejected' | 'suspended';
+  status: 'pending' | 'approved' | 'rejected' | 'suspended';
   approval_date: string | null;
   rejection_reason: string | null;
-  suspension_reason: string | null;
   is_verified: boolean;
-  verification_notes: string | null;
-  total_products: number;
-  total_orders: number;
-  total_revenue: string;
-  average_rating: string;
-  total_reviews: number;
+  rating: string;
+  total_ratings: number;
   commission_rate: string;
 }
 
