@@ -21,6 +21,7 @@ import { useState, useCallback, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { ProductInfoSection } from '@/components/common/ProductInfoSection';
 import { WholesaleTierDisplay } from '@/components/common/WholesaleTierDisplay';
+import { analyticsService } from '@/services/analytics.service';
 import {
   FiShoppingCart, FiHeart, FiTruck, FiShield, FiChevronLeft, FiChevronRight, FiShare2,
   FiMinus, FiPlus, FiPackage, FiCheck, FiStar, FiFileText, FiCheckCircle, FiMapPin,
@@ -104,6 +105,18 @@ export default function ProductDetailPage() {
     }
   }, [product, addToCart, addToWishlist, navigate, getAndClearPendingAction]);
 
+  // Track a product view once per loaded product (drives most-viewed /
+  // recommendations / new-product alerts). Fire-and-forget, keyed on id so it
+  // fires once per product, not on every re-render.
+  useEffect(() => {
+    if (!product?.id) return;
+    analyticsService.productView(product.id, {
+      name: product.name,
+      slug: product.slug,
+      category: product.category,
+    });
+  }, [product?.id, product?.name, product?.slug, product?.category]);
+
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!canHover) return;
     const rect = e.currentTarget.getBoundingClientRect();
@@ -168,6 +181,12 @@ export default function ProductDetailPage() {
     })) return;
     if (!active) { toast.error('No seller available for this product'); return; }
     addToCart({ sellerId: active.seller, variantId: active.variant, quantity });
+    analyticsService.addToCart(product.id, {
+      name: product.name,
+      sellerId: active.seller,
+      quantity,
+      price: priceNum,
+    });
   };
 
   const handleBuyNow = () => {
@@ -180,6 +199,12 @@ export default function ProductDetailPage() {
     })) return;
     if (!active) { toast.error('No seller available for this product'); return; }
     addToCart({ sellerId: active.seller, variantId: active.variant, quantity });
+    analyticsService.buyNow(product.id, {
+      name: product.name,
+      sellerId: active.seller,
+      quantity,
+      price: priceNum,
+    });
     navigate('/buyer/cart');
   };
 

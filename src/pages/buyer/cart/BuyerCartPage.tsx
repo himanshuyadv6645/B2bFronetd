@@ -15,6 +15,7 @@ import toast from 'react-hot-toast';
 import { useState, useEffect } from 'react';
 import { buyerService } from '@/services/buyer.service';
 import { orderService } from '@/services/order.service';
+import { analyticsService } from '@/services/analytics.service';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { FiTrash2, FiPlus, FiMinus, FiShoppingBag, FiArrowRight, FiArrowLeft, FiCreditCard, FiMapPin, FiCheck } from 'react-icons/fi';
 import type { CartItem } from '@/types/cart';
@@ -38,12 +39,27 @@ export default function BuyerCartPage() {
   });
 
   const checkoutMutation = useMutation({
-    mutationFn: () => orderService.createOrder({
-      shipping_address: selectedShippingAddress,
-      billing_address: selectedBillingAddress || selectedShippingAddress,
-      payment_method: 'cod',
-    }),
-    onSuccess: () => {
+    mutationFn: () => {
+      // Track that the user actually initiated payment/order placement. Pairing
+      // this with checkout_started lets us detect abandoned checkouts (started
+      // but never placed).
+      analyticsService.paymentInitiated({
+        itemCount: cart?.total_items ?? cart?.items?.length ?? 0,
+        total: cart?.total_amount,
+        payment_method: 'cod',
+      });
+      return orderService.createOrder({
+        shipping_address: selectedShippingAddress,
+        billing_address: selectedBillingAddress || selectedShippingAddress,
+        payment_method: 'cod',
+      });
+    },
+    onSuccess: (order: any) => {
+      // Mark the checkout as completed so abandoned-cart/payment detection
+      // does NOT flag this user (they finished the order).
+      analyticsService.track('order_placed', 'order', order?.id, {
+        total: cart?.total_amount,
+      });
       toast.success('Order placed successfully!');
       queryClient.invalidateQueries({ queryKey: ['cart'] });
       queryClient.invalidateQueries({ queryKey: ['orders'] });
@@ -56,6 +72,16 @@ export default function BuyerCartPage() {
       queryClient.invalidateQueries({ queryKey: ['cart'] });
     },
   });
+
+  // Track that the user entered the checkout/payment step. Fires once each time
+  // the checkout view opens (drives abandoned-checkout detection).
+  useEffect(() => {
+    if (!showCheckout) return;
+    analyticsService.checkoutStarted({
+      itemCount: cart?.total_items ?? cart?.items?.length ?? 0,
+      total: cart?.total_amount,
+    });
+  }, [showCheckout, cart?.items?.length, cart?.total_items, cart?.total_amount]);
 
   // Auto-open checkout if redirected after login with CHECKOUT pending action
   useEffect(() => {

@@ -4,6 +4,7 @@ import type { User, AuthTokens } from '@/types/user';
 import { authService } from '@/services/auth.service';
 import { getTokens, setTokens, clearTokens, setLoggingOut } from '@/config/api';
 import { clearCachedLocation } from '@/services/location.service';
+import { initPush, disablePush } from '@/services/push.service';
 import { queryClient } from '@/lib/queryClient';
 import toast from 'react-hot-toast';
 
@@ -46,6 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setTokensState(storedTokens);
       const userData = await authService.getProfile();
       setUser(userData);
+      void initPush();
     } catch {
       clearTokens();
       setTokensState(null);
@@ -64,6 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setTokens(result.tokens);
     setTokensState(result.tokens);
     setUser(result.user);
+    void initPush();
   };
 
   const register = async (data: { email: string; password: string; confirm_password: string; role: 'buyer' | 'seller'; phone?: string }) => {
@@ -71,11 +74,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setTokens(result.tokens);
     setTokensState(result.tokens);
     setUser(result.user);
+    void initPush();
   };
 
   const logout = async () => {
     // Set flag FIRST to prevent 401 interceptor from redirecting to /login
     setLoggingOut(true);
+
+    // Unregister this browser's push token while we still have a valid token.
+    await disablePush();
 
     try {
       if (tokens?.refresh) {
