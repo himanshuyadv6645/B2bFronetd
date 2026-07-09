@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { productService } from '@/services/product.service';
+import { analyticsService } from '@/services/analytics.service';
 import { getCategoryImage } from '@/lib/categoryImages';
 import { SmartImage } from '@/components/common/SmartImage';
 import { FiChevronRight } from 'react-icons/fi';
@@ -118,6 +119,7 @@ export function MegaMenu() {
                       ? 'bg-brand/10 font-semibold text-brand'
                       : 'text-gray-700 hover:bg-white hover:text-brand'
                   }`}
+                  onClick={() => analyticsService.categoryView({ slug: cat.slug, name: cat.name })}
                   onMouseEnter={() => setActiveRoot(cat.id)}
                 >
                   <SmartImage
@@ -157,7 +159,7 @@ export function MegaMenu() {
                       key={sub.id}
                       to={`/products?category=${sub.id}`}
                       className="group flex items-center gap-2.5 rounded-lg p-2.5 transition-colors hover:bg-brand/5"
-                      onClick={() => { setIsOpen(false); setActiveRoot(null); }}
+                      onClick={() => { analyticsService.subcategoryView({ slug: sub.slug, name: sub.name, parent: activeCategory.slug }); setIsOpen(false); setActiveRoot(null); }}
                     >
                       <SmartImage
                         src={getCategoryImage(sub.name, sub.image)}

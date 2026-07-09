@@ -32,13 +32,15 @@ export type AnalyticsEntityType =
 export type AnalyticsEventType =
   | 'product_view'
   | 'category_view'
+  | 'subcategory_view'
   | 'search'
   | 'add_to_cart'
   | 'remove_from_cart'
   | 'buy_now'
   | 'checkout_started'
   | 'payment_initiated'
-  | 'wishlist_add';
+  | 'wishlist_add'
+  | 'order_placed';
 
 interface TrackPayload {
   event_type: AnalyticsEventType | string;
@@ -98,6 +100,17 @@ export const analyticsService = {
 
   paymentInitiated: (metadata: Record<string, unknown> = {}) =>
     track('payment_initiated', 'payment', undefined, metadata),
+
+  wishlistAdd: (productId: string, metadata: Record<string, unknown> = {}) =>
+    track('wishlist_add', 'product', productId, metadata),
+
+  // Category / subcategory clicks are low-priority interest signals. Categories
+  // are keyed by slug (no product UUID), so slug/name go in metadata.
+  categoryView: (metadata: Record<string, unknown> = {}) =>
+    track('category_view', 'category', undefined, metadata),
+
+  subcategoryView: (metadata: Record<string, unknown> = {}) =>
+    track('subcategory_view', 'category', undefined, metadata),
 };
 
 export default analyticsService;

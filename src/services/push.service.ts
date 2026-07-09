@@ -64,6 +64,9 @@ export async function initPush(): Promise<void> {
       vapidKey,
       serviceWorkerRegistration: registration,
     });
+    
+    console.log("FCM TOKEN:", token);
+    
     if (!token) return;
 
     currentToken = token;
@@ -78,12 +81,33 @@ export async function initPush(): Promise<void> {
         if (title || body) {
           if (Notification.permission === 'granted') {
             navigator.serviceWorker.ready.then(reg => {
-              reg.showNotification(title ?? 'Notification', {
-                body: body,
+              // `image` and `actions` are valid at runtime (service-worker
+              // notifications) but missing from TS's built-in NotificationOptions.
+              type RichNotificationOptions = NotificationOptions & {
+                image?: string;
+                actions?: { action: string; title: string }[];
+              };
+              const notificationOptions: RichNotificationOptions = {
+                body,
                 icon: '/favicon.svg',
                 badge: '/favicon.svg',
                 data: { url: payload.data?.action_url || '/' }
-              });
+              };
+
+              if (payload.data?.image_url) {
+                notificationOptions.image = payload.data.image_url;
+              }
+
+              if (payload.data?.button_text) {
+                notificationOptions.actions = [
+                  {
+                    action: 'click_action',
+                    title: payload.data.button_text
+                  }
+                ];
+              }
+
+              reg.showNotification(title || 'Notification', notificationOptions);
             });
           } else {
             toast(`${title ?? ''}${title && body ? ' — ' : ''}${body ?? ''}`.trim(), {

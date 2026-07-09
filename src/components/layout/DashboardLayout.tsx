@@ -43,6 +43,7 @@ const sidebarConfig = {
     { icon: FiGrid, label: 'Categories', path: '/admin/categories' },
     { icon: FiTag, label: 'Brands', path: '/admin/brands' },
     { icon: FiBarChart2, label: 'Analytics', path: '/admin/analytics' },
+    { icon: FiBell, label: 'Broadcast', path: '/admin/broadcast' },
     { icon: FiBell, label: 'Notifications', path: '/admin/notifications' },
   ],
 };

@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { FiArrowRight } from 'react-icons/fi';
 import { productService } from '@/services/product.service';
+import { analyticsService } from '@/services/analytics.service';
 import { ProductCarousel } from '@/components/home/ProductCarousel';
 import { getCategoryImage } from '@/lib/categoryImages';
 import { SmartImage } from '@/components/common/SmartImage';
@@ -66,6 +67,7 @@ export function CategorySection({ category }: CategorySectionProps) {
               <Link
                 key={sub.id}
                 to={`/products?category=${sub.slug}`}
+                onClick={() => analyticsService.subcategoryView({ slug: sub.slug, name: sub.name, parent: category.slug })}
                 className="rounded-full border bg-white px-3 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:border-brand/30 hover:bg-brand/5 hover:text-brand"
               >
                 {sub.name}
