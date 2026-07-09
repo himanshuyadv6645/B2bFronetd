@@ -2,6 +2,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useRef, useEffect, useState, useCallback } from 'react';
 import { productService } from '@/services/product.service';
+import { analyticsService } from '@/services/analytics.service';
 import { getCategoryImage } from '@/lib/categoryImages';
 import { SmartImage } from '@/components/common/SmartImage';
 import { FiGrid, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
@@ -240,6 +241,7 @@ export function CategoryBar() {
                 key={cat.slug}
                 data-category={cat.slug}
                 to={`/products?category=${cat.slug}`}
+                onClick={() => analyticsService.categoryView({ slug: cat.slug, name: cat.name })}
                 style={{ scrollSnapAlign: 'start' }}
                 className={`group flex flex-shrink-0 flex-col items-center gap-1 rounded-xl px-2.5 py-2 transition-all duration-200 select-none ${
                   isActive

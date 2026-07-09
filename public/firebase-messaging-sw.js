@@ -28,14 +28,57 @@ if (firebaseConfig.apiKey && firebaseConfig.projectId) {
     const title = (payload.notification && payload.notification.title) || 'New notification';
     const body = (payload.notification && payload.notification.body) || '';
     const data = payload.data || {};
-    self.registration.showNotification(title, {
+    
+    const notificationOptions = {
       body,
       icon: '/favicon.svg',
       badge: '/favicon.svg',
       data: { url: data.action_url || '/' },
-    });
+    };
+
+    if (data.image_url) {
+      notificationOptions.image = data.image_url;
+    }
+
+    if (data.button_text) {
+      notificationOptions.actions = [
+        {
+          action: 'click_action',
+          title: data.button_text
+        }
+      ];
+    }
+
+    self.registration.showNotification(title, notificationOptions);
   });
 }
+
+// Allow testing from Chrome DevTools 'Push' button
+self.addEventListener('push', (event) => {
+  // If it's an FCM push, firebase.messaging() intercepts it and prevents this from showing a duplicate IF the payload format matches FCM's internal format.
+  // However, for manual DevTools testing, this will handle it.
+  if (event.data) {
+    try {
+      const data = event.data.json();
+      // Only show if it's not a standard FCM structure (which is handled by onBackgroundMessage)
+      if (!data.notification && !data.data?.['gcm.message_id']) {
+        event.waitUntil(
+          self.registration.showNotification(data.title || 'Test Notification', {
+            body: data.body || 'Push from DevTools',
+            icon: '/favicon.svg',
+          })
+        );
+      }
+    } catch {
+      event.waitUntil(
+        self.registration.showNotification('Test Notification', {
+          body: event.data.text() || 'Push from DevTools',
+          icon: '/favicon.svg',
+        })
+      );
+    }
+  }
+});
 
 // Focus/open the app on notification click, honouring the action_url.
 self.addEventListener('notificationclick', (event) => {

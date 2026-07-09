@@ -214,7 +214,10 @@ export default function ProductDetailPage() {
       productId: product.id,
       variantId,
     })) return;
-    if (variantId) addToWishlist({ variantId });
+    if (variantId) {
+      addToWishlist({ variantId });
+      analyticsService.wishlistAdd(product.id, { name: product.name, category: product.category });
+    }
   };
 
   const checkPincode = () => {
